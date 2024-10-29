@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <title>Personal Assistant</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #fff;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            z-index: 1000;
+        }
+
+        .container {
+            margin-top: 60px;
+            margin-bottom: 70px;
+        }
+
+        .category-select {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .chat-input {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 15px;
+            background: #fff;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            gap: 10px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 20px;
+            font-size: 16px;
+        }
+
+        button {
+            padding: 10px 20px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            font-size: 16px;
+        }
+
+        .message {
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 10px;
+            max-width: 80%;
+        }
+
+        .user-message {
+            background: #007AFF;
+            color: white;
+            margin-left: auto;
+        }
+
+        .assistant-message {
+            background: #E9E9EB;
+            color: black;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <select class="category-select" id="categorySelect">
+            <option value="">Select Category</option>
+            <option value="ideas">Ideas</option>
+            <option value="tasks">Tasks</option>
+            <option value="notes">Notes</option>
+        </select>
+    </div>
+
+    <div class="container" id="chatContainer"></div>
+
+    <div class="chat-input">
+        <input type="text" id="messageInput" placeholder="Type your message...">
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        // Initialize messages storage if it doesn't exist
+        if (!localStorage.getItem('messages')) {
+            localStorage.setItem('messages', JSON.stringify({}));
+        }
+
+        function loadMessages(category) {
+            const messages = JSON.parse(localStorage.getItem('messages'));
+            const categoryMessages = messages[category] || [];
+            const chatContainer = document.getElementById('chatContainer');
+            chatContainer.innerHTML = '';
+            
+            categoryMessages.forEach(msg => {
+                const messageDiv = document.createElement('div');
+                messageDiv.className = `message ${msg.type}-message`;
+                messageDiv.textContent = msg.text;
+                chatContainer.appendChild(messageDiv);
+            });
+            
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        document.getElementById('categorySelect').addEventListener('change', (e) => {
+            loadMessages(e.target.value);
+        });
+
+        function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const category = document.getElementById('categorySelect').value;
+            
+            if (!input.value.trim() || !category) return;
+
+            const messages = JSON.parse(localStorage.getItem('messages'));
+            if (!messages[category]) {
+                messages[category] = [];
+            }
+
+            // Save user message
+            messages[category].push({
+                type: 'user',
+                text: input.value,
+                timestamp: new Date().toISOString()
+            });
+
+            // Save assistant response
+            messages[category].push({
+                type: 'assistant',
+                text: `Saved to ${category}: "${input.value}"`,
+                timestamp: new Date().toISOString()
+            });
+
+            localStorage.setItem('messages', JSON.stringify(messages));
+            
+            loadMessages(category);
+            input.value = '';
+        }
+
+        // Handle Enter key
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
